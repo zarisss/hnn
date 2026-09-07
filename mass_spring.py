@@ -3,7 +3,8 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import autograd
 import autograd.numpy as anp
-
+import torch
+from torch import nn
 k = 1
 m = 1
 
@@ -42,12 +43,18 @@ def generate_data(initial_state):
 def gaussian_noise(state, sigma = np.sqrt(0.1)):
     return state + np.random.normal(0, sigma, state.shape)
 
-initi = initial_energy()
-split = int(0.8*len(initi))
+def build_data():
+    initi = initial_energy()
+    split = int(0.8*len(initi))
 
-train_state, train_derivatives = generate_data(initi[: split])
-test_state, test_derivatives = generate_data(initi[split :])
+    train_state, train_derivatives = generate_data(initi[: split])
+    test_state, test_derivatives = generate_data(initi[split :])
 
-train_state_noise = gaussian_noise(train_state)
-test_state_noise = gaussian_noise(test_state)
+    train_state_noise = gaussian_noise(train_state)
+    test_state_noise = gaussian_noise(test_state)
+
+    state_tensor = torch.tensor(train_state_noise, dtype=torch.float32).requires_grad_() #all the arrays created by the numpy module is float64, but the tensor module expects float32, hence the conversion.
+    test_tensor = torch.tensor(test_state_noise, dtype=torch.float32).requires_grad_()
+    derivative_tensor = torch.tensor(train_derivatives, dtype=torch.float32).requires_grad_()
+    return state_tensor, test_tensor, derivative_tensor
 
